@@ -1,0 +1,300 @@
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <string>
+using namespace std;
+
+class Account {
+private:
+    int accountNumber;
+    string holderName;
+    double balance;
+
+public:
+    // Function to create a new account
+    void createAccount() {
+        cout << "\nEnter Account Number: ";
+        cin >> accountNumber;
+        cout << "Enter Account Holder Name: ";
+        cin.ignore();
+        getline(cin, holderName);
+        cout << "Enter Initial Balance: ";
+        cin >> balance;
+        cout << "\nAccount created successfully!\n";
+    }
+
+    // Function to display account details
+    void displayAccount() const {
+        cout << "\nAccount Number: " << accountNumber;
+        cout << "\nAccount Holder Name: " << holderName;
+        cout << "\nAccount Balance: $" << fixed << setprecision(2) << balance << endl;
+    }
+
+    // Function to modify account details
+    void modifyAccount() {
+        cout << "\nModify Account Holder Name: ";
+        cin.ignore();
+        getline(cin, holderName);
+        cout << "\nAccount details updated successfully!\n";
+    }
+
+    // Function to deposit an amount
+    void deposit(double amount) {
+        balance += amount;
+        cout << "\nDeposit successful! New Balance: $" << fixed << setprecision(2) << balance << endl;
+    }
+
+    // Function to withdraw an amount
+    void withdraw(double amount) {
+        if (amount > balance) {
+            cout << "\nInsufficient balance!\n";
+        } else {
+            balance -= amount;
+            cout << "\nWithdrawal successful! New Balance: $" << fixed << setprecision(2) << balance << endl;
+        }
+    }
+
+    // Getter for account number
+    int getAccountNumber() const {
+        return accountNumber;
+    }
+
+    // Save account data to file
+    void saveToFile(ofstream& outFile) const {
+        outFile << accountNumber << "\n" << holderName << "\n" << balance << "\n";
+    }
+
+    // Load account data from file
+    void loadFromFile(ifstream& inFile) {
+        inFile >> accountNumber;
+        inFile.ignore();
+        getline(inFile, holderName);
+        inFile >> balance;
+    }
+};
+
+// Function prototypes
+void createNewAccount();
+void displayAllAccounts();
+void depositToAccount();
+void withdrawFromAccount();
+void searchAccount();
+void deleteAccount();
+
+const string FILE_NAME = "accounts.txt";
+
+int main() {
+    int choice;
+
+    do {
+        cout << "\n=== Banking Management System ===";
+        cout << "\n1. Create New Account";
+        cout << "\n2. Display All Accounts";
+        cout << "\n3. Deposit Amount";
+        cout << "\n4. Withdraw Amount";
+        cout << "\n5. Search Account";
+        cout << "\n6. Delete Account";
+        cout << "\n7. Exit";
+        cout << "\nEnter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+        case 1:
+            createNewAccount();
+            break;
+        case 2:
+            displayAllAccounts();
+            break;
+        case 3:
+            depositToAccount();
+            break;
+        case 4:
+            withdrawFromAccount();
+            break;
+        case 5:
+            searchAccount();
+            break;
+        case 6:
+            deleteAccount();
+            break;
+        case 7:
+            cout << "\nExiting the program. Goodbye!\n";
+            break;
+        default:
+            cout << "\nInvalid choice! Please try again.\n";
+        }
+    } while (choice != 7);
+
+    return 0;
+}
+
+// Function to create a new account and save it to file
+void createNewAccount() {
+    Account acc;
+    acc.createAccount();
+
+    ofstream outFile(FILE_NAME, ios::app);
+    if (outFile.is_open()) {
+        acc.saveToFile(outFile);
+        outFile.close();
+    } else {
+        cout << "\nError: Unable to save account data to file.\n";
+    }
+}
+
+// Function to display all accounts from the file
+void displayAllAccounts() {
+    ifstream inFile(FILE_NAME);
+    if (!inFile.is_open()) {
+        cout << "\nNo accounts found!\n";
+        return;
+    }
+
+    Account acc;
+    while (!inFile.eof()) {
+        acc.loadFromFile(inFile);
+        if (!inFile.eof()) {
+            acc.displayAccount();
+            cout << "------------------------\n";
+        }
+    }
+    inFile.close();
+}
+
+// Function to deposit to a specific account
+void depositToAccount() {
+    int accountNum;
+    double amount;
+    bool found = false;
+
+    cout << "\nEnter Account Number: ";
+    cin >> accountNum;
+    cout << "Enter Amount to Deposit: ";
+    cin >> amount;
+
+    fstream file(FILE_NAME, ios::in | ios::out);
+    if (!file.is_open()) {
+        cout << "\nNo accounts found!\n";
+        return;
+    }
+
+    Account acc;
+    while (!file.eof() && !found) {
+        int pos = file.tellg();
+        acc.loadFromFile(file);
+        if (acc.getAccountNumber() == accountNum) {
+            acc.deposit(amount);
+            file.seekp(pos);
+            acc.saveToFile(file);
+            found = true;
+        }
+    }
+    file.close();
+
+    if (!found) {
+        cout << "\nAccount not found!\n";
+    }
+}
+
+// Function to withdraw from a specific account
+void withdrawFromAccount() {
+    int accountNum;
+    double amount;
+    bool found = false;
+
+    cout << "\nEnter Account Number: ";
+    cin >> accountNum;
+    cout << "Enter Amount to Withdraw: ";
+    cin >> amount;
+
+    fstream file(FILE_NAME, ios::in | ios::out);
+    if (!file.is_open()) {
+        cout << "\nNo accounts found!\n";
+        return;
+    }
+
+    Account acc;
+    while (!file.eof() && !found) {
+        int pos = file.tellg();
+        acc.loadFromFile(file);
+        if (acc.getAccountNumber() == accountNum) {
+            acc.withdraw(amount);
+            file.seekp(pos);
+            acc.saveToFile(file);
+            found = true;
+        }
+    }
+    file.close();
+
+    if (!found) {
+        cout << "\nAccount not found!\n";
+    }
+}
+
+// Function to search for an account
+void searchAccount() {
+    int accountNum;
+    bool found = false;
+
+    cout << "\nEnter Account Number: ";
+    cin >> accountNum;
+
+    ifstream inFile(FILE_NAME);
+    if (!inFile.is_open()) {
+        cout << "\nNo accounts found!\n";
+        return;
+    }
+
+    Account acc;
+    while (!inFile.eof() && !found) {
+        acc.loadFromFile(inFile);
+        if (acc.getAccountNumber() == accountNum) {
+            acc.displayAccount();
+            found = true;
+        }
+    }
+    inFile.close();
+
+    if (!found) {
+        cout << "\nAccount not found!\n";
+    }
+}
+
+// Function to delete an account
+void deleteAccount() {
+    int accountNum;
+    cout << "\nEnter Account Number to Delete: ";
+    cin >> accountNum;
+
+    ifstream inFile(FILE_NAME);
+    ofstream tempFile("temp.txt");
+
+    if (!inFile.is_open() || !tempFile.is_open()) {
+        cout << "\nError: Unable to process file!\n";
+        return;
+    }
+
+    Account acc;
+    bool deleted = false;
+
+    while (!inFile.eof()) {
+        acc.loadFromFile(inFile);
+        if (!inFile.eof() && acc.getAccountNumber() != accountNum) {
+            acc.saveToFile(tempFile);
+        } else if (acc.getAccountNumber() == accountNum) {
+            deleted = true;
+        }
+    }
+
+    inFile.close();
+    tempFile.close();
+
+    remove(FILE_NAME.c_str());
+    rename("temp.txt", FILE_NAME.c_str());
+
+    if (deleted) {
+        cout << "\nAccount deleted successfully!\n";
+    } else {
+        cout << "\nAccount not found!\n";
+    }
+}

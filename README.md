@@ -1,1 +1,2 @@
 # Banking-Management-System
+The Banking Management System is a simple yet powerful application built using Object-Oriented Programming principles in C++. It allows users to manage banking operations such as account creation, deposits, withdrawals, and account data maintenance efficiently. The project is designed for learning purposes, showcasing how OOP concepts like encapsulation, inheritance, and polymorphism can be applied to build a robust system.
